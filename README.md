@@ -7,4 +7,4 @@
 - [x] Acrescentar a dependência em r à tolerância
 - [ ] Implementar a diferença de Income a cada agente, de acordo com o seu grupo
 - [ ] Fazer histograma de r por cor
-- [ ] Criar métrica de segregação por r (somar o r de todos os agentes de uma dada cor divido pelo # de agentes dessa cor) e ver como essa métrica varia com diferentes % de minoria
+- [ ] Criar métrica de segregação por r (r médio: somar o r de todos os agentes de uma dada cor divido pelo # de agentes dessa cor) e ver como essa métrica varia com diferentes % de minoria
