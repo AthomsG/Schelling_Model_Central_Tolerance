@@ -10,6 +10,7 @@
 - [x] Criar métrica de segregação por r (r médio: somar o r de todos os agentes de uma dada cor divido pelo # de agentes dessa cor) e ver como essa métrica varia com diferentes % de minoria;
 - [ ] Definir e implementar métricas para estudar a evolução do sistema ao longo do tempo;
 - [ ] Implementar função que retorna o r médio mínimo para um dado número de agentes;
+- [ ] Fazer o plot dos histogramas de r, para cortes circulares na matriz;
 - [ ] ~~Implementar a diferença de Income a cada agente, de acordo com o seu grupo;~~
 
 ## Questões em Aberto
