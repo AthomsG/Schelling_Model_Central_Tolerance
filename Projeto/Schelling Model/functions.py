@@ -236,3 +236,65 @@ def save_data(lista, filename):
             textfile.write(str(el))
         textfile.write('\n')
     textfile.close()
+    
+def get_r_circle(N, d, f1):
+    return N*np.sqrt(d*f1/np.pi)
+    
+def get_r_average_sample_circle(N, density, f1, N_agents = N*N*density*f1):
+    
+    # Make matrix + r_matrix
+    matrix = list()
+    r_matrix = list()
+
+    for i in range(N):
+        linha = list()
+        linha_ = list()
+        for j in range(N):
+            linha.append(0)
+            linha_.append(get_r(i,j,N))
+        matrix.append(linha)
+        r_matrix.append(linha_)
+        
+    # Fill matrix
+    for agent in range(N_agents): # iterate on all agents to fill matrix (and make their r the lowest possible)
+    
+        # Iterate on r_matrix
+    
+        r_lowest = r_matrix[0][0]
+        i_lowest = 0
+        j_lowest = 0
+    
+        for i in range(N):
+            for j in range(N):
+                if (r_matrix[i][j] < r_lowest) and (matrix[i][j] == 0):
+                    r_lowest = r_matrix[i][j]
+                    i_lowest = i
+                    j_lowest = j
+    
+        if matrix[i_lowest][j_lowest] == 0:
+            matrix[i_lowest][j_lowest] = 1
+            
+    # Compute r average
+    r_average = 0
+
+    for i in range(N):
+        for j in range(N):
+            if matrix[i][j] == 1:
+                r_average += r_matrix[i][j]
+            
+    return r_average/N_agents
+
+def sample_circles(N, f1s, density, N_agents = -1):
+    if N_agents == -1:
+        N_agents = [int(N*N*density*f1) for f1 in f1s]
+        
+    r_aves = list()
+    
+    print('', end='r')
+    
+    for i in range(len(f1s)):
+        r_aves.append(get_r_average_sample_circle(N, density, f1s[i], N_agents[i]))
+        print(str(i+1) + '/' + str(len(f1s)), end='\r')
+    
+    print('Finished!', end='\r')
+    return r_aves
