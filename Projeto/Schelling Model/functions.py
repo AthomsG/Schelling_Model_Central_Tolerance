@@ -240,7 +240,10 @@ def save_data(lista, filename):
 def get_r_circle(N, d, f1):
     return N*np.sqrt(d*f1/np.pi)
     
-def get_r_average_sample_circle(N, density, f1, N_agents = N*N*density*f1):
+def get_r_average_sample_circle(N, density, f1, N_agents = -1):
+    
+    if N_agents == -1:
+        N_agents = N*N*density*f1
     
     # Make matrix + r_matrix
     matrix = list()
