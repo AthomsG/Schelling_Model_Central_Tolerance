@@ -193,7 +193,7 @@ def iteration(matrix, algo, tol_matrix):
     return new_matrix
 
 
-def run(N, density, f1, n_iter=100, tmin=0.1, tmax=0.9, measure_happiness=False, measure_r_values=False):
+def run(N, density, f1, n_iter=500, tmin=0.1, tmax=0.9, measure_happiness=False, measure_r_values=False):
 
     matrix_    = make_matrix(N, density, f1)
     new_matrix = matrix_.copy()
@@ -219,7 +219,7 @@ def run(N, density, f1, n_iter=100, tmin=0.1, tmax=0.9, measure_happiness=False,
             red_rs.append([get_r(coord[0], coord[1], N) for coord in get_agents(matrix_, -1)])
             blu_rs.append([get_r(coord[0], coord[1], N) for coord in get_agents(matrix_,  1)])
 
-        matrix = new_matrix.copy()
+        matrix_ = new_matrix.copy()
 
         print(str(i+1) + '/' + str(n_iter), end='\r')
 
