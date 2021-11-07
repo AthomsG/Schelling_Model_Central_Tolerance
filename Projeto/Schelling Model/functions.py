@@ -12,21 +12,25 @@ color_map = {-1: np.array([255, 0, 0]), # red
              1: np.array([0, 0, 255])} # blue
 
 def make_matrix(N, density, f1):
+    # Number of agents:
+    n_agents = int(N*N*density)
+    n1 = int(n_agents*f1)
+    n_1 = n_agents - n1
+    emptys = N*N - n_agents
+    
+    agents = [1 for i in range(n1)] + [-1 for i in range(n_1)] + [0 for i in range(emptys)]
+    rd.shuffle(agents)
+    
     matrix = list()
+    dummy = 0
 
     for i in range(N):
         linha = list()
         for j in range(N):
-            linha.append(0)
+            linha.append(agents[dummy])
+            dummy += 1
         matrix.append(linha)
-
-    for linha in range(N):
-        for coluna in range(N):
-            if (rd.random() <= density):
-                if (rd.random() <= f1):
-                    matrix[linha][coluna] = 1
-                else:
-                    matrix[linha][coluna] = -1
+    
     return matrix
 
 offset = 1/2
@@ -172,6 +176,50 @@ def get_happiness(matrix, algo, tol_matrix, diss_list=None):
         diss_list = get_dissatisfied(matrix, algo, tol_matrix)
     return (1 - len(diss_list)/N**2)
 
+def get_morin_index(matrix_):
+    
+    N_= len(matrix_)
+    
+    # Calculate average color:
+    c_average = 0
+    n_agents = 0
+    
+    for i in range(N_):
+        for j in range(N_):
+            if matrix_[i][j] != 0:
+                n_agents += 1
+                c_average += matrix_[i][j]
+            
+    c_average = c_average/n_agents
+            
+    # Calculate numerator and denominator term:
+    numerator = 0
+    denominator = 0
+    sum_of_ws = 0
+    
+    for i in range(N_):
+        for j in range(N_):
+            if matrix_[i][j] != 0:
+                denominator += (matrix_[i][j] - c_average)*(matrix_[i][j] - c_average)
+            
+                neighbours_w_empty = get_neighbours([i,j],N_)
+                neighbours = list()
+                # remove empty neighbours
+                for neighbour in neighbours_w_empty:
+                    if matrix_[neighbour[0]][neighbour[1]] != 0:
+                        neighbours.append(neighbour)
+                    
+                sum_of_ws += len(neighbours)
+                
+                for neighbour in neighbours:
+                    numerator += (matrix_[i][j] - c_average)*(matrix_[neighbour[0]][neighbour[1]] - c_average)
+    
+    # Calculate Morin's I
+    
+    index = n_agents*numerator/(sum_of_ws*denominator)
+    
+    return index
+
 def iteration(matrix, algo, tol_matrix):
     new_matrix = matrix.copy()
 
@@ -193,7 +241,7 @@ def iteration(matrix, algo, tol_matrix):
     return new_matrix
 
 
-def run(N, density, f1, n_iter=500, tmin=0.1, tmax=0.9, measure_happiness=False, measure_r_values=False):
+def run(N, density, f1, n_iter=500, tmin=0.1, tmax=0.9, measure_happiness=False, measure_r_values=False, measure_morin=False):
 
     matrix_    = make_matrix(N, density, f1)
     new_matrix = matrix_.copy()
@@ -201,6 +249,7 @@ def run(N, density, f1, n_iter=500, tmin=0.1, tmax=0.9, measure_happiness=False,
     tol_matrix = get_tol_matrix(N, tmax=tmax, tmin=tmin)
 
     happiness = list()
+    morin = list()
     red_rs  = list()
     blu_rs  = list()
 
@@ -214,17 +263,19 @@ def run(N, density, f1, n_iter=500, tmin=0.1, tmax=0.9, measure_happiness=False,
             break
 
         if measure_happiness:
-            happiness.append(get_happiness(matrix_, dis_algo, tol_matrix))
+            happiness.append(get_happiness(matrix_, dis_algo, tol_matrix))            
         if measure_r_values:
             red_rs.append([get_r(coord[0], coord[1], N) for coord in get_agents(matrix_, -1)])
             blu_rs.append([get_r(coord[0], coord[1], N) for coord in get_agents(matrix_,  1)])
-
+        if measure_morin:
+            morin.append(get_morin_index(matrix_))
+            
         matrix_ = new_matrix.copy()
 
         print(str(i+1) + '/' + str(n_iter), end='\r')
 
     print('Finished!', end='\r')
-    return {'matrix':matrix_, 'happiness':happiness, 'red_rs':red_rs, 'blu_rs':blu_rs}
+    return {'matrix':matrix_, 'happiness':happiness, 'red_rs':red_rs, 'blu_rs':blu_rs, 'morin':morin}
 
 def save_data(lista, filename):
     textfile = open(filename, "w")
@@ -301,3 +352,96 @@ def sample_circles(N, f1s, density, N_agents = -1):
     
     print('Finished!', end='\r')
     return r_aves
+
+def average(lista):
+    return sum(lista)/len(lista)
+
+def get_sections(matrix, r1, r2, r3):
+    
+    N       = len(matrix)
+    is_in   = bool
+    sections = [[], [], [], []]
+    
+    for i in range(N):
+        for j in range(N):
+            is_in = False
+            r = get_r(i=i, j=j, N=N)
+            if r < r1:
+                sections[0].append([i, j])
+                is_in = True
+            if r < r2 and is_in == False:
+                sections[1].append([i, j])
+                is_in = True
+            if r < r3 and is_in == False:
+                sections[2].append([i, j])
+                is_in = True
+            if not is_in:
+                sections[3].append([i, j])
+    return sections
+
+def is_in_list(coord,list_of_coords):
+    output = False
+
+    for test_coord in list_of_coords:
+        if test_coord[0] == coord[0] and test_coord[1] == coord[1]:
+            output = True
+            
+    return output
+
+def intersect_lists(list1,list2):
+    output = list()
+    
+    for coord1 in list1:
+        for coord2 in list2:
+            if coord1[0] == coord2[0] and coord1[1] == coord2[1]:
+                output.append(coord1)
+            
+    return output
+
+def get_morin_index_section(matrix_, section=[]):
+    
+    N_= len(matrix_)
+    
+    # Calculate average color:
+    c_average = 0
+    n_agents = 0
+    
+    for i in range(N_):
+        for j in range(N_):
+            if matrix_[i][j] != 0:
+                if is_in_list([i,j],section):
+                    n_agents += 1
+                    c_average += matrix_[i][j]
+            
+    c_average = c_average/n_agents
+            
+    # Calculate numerator and denominator term:
+    numerator = 0
+    denominator = 0
+    sum_of_ws = 0
+    
+    for i in range(N_):
+        for j in range(N_):
+            if matrix_[i][j] != 0:
+                if is_in_list([i,j],section):
+                    denominator += (matrix_[i][j] - c_average)*(matrix_[i][j] - c_average)
+            
+                    neighbours_w_empty = get_neighbours([i,j],N_)
+                    
+                    neighbours = list()
+                    # remove empty neighbours
+                    for neighbour in neighbours_w_empty:
+                        if matrix_[neighbour[0]][neighbour[1]] != 0:
+                            neighbours.append(neighbour)
+                    
+                    #neighbours = intersect_lists(get_neighbours([i,j],N_),section)
+                    sum_of_ws += len(neighbours)
+                
+                    for neighbour in neighbours:
+                        numerator += (matrix_[i][j] - c_average)*(matrix_[neighbour[0]][neighbour[1]] - c_average)
+    
+    # Calculate Morin's I
+    
+    index = n_agents*numerator/(sum_of_ws*denominator)
+    
+    return index
